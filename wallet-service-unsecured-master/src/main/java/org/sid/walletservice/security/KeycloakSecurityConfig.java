@@ -20,9 +20,13 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
         http.csrf().disable();
         http.cors();
 
+        http.authorizeRequests().antMatchers("graphql/**").permitAll();
+        http.authorizeRequests().antMatchers("graphiql/**").permitAll();
+
         http.authorizeRequests()
                 .antMatchers("/h2-console/**","/swagger-ui/**","/v3/**",
                         "/public/**","/actuator.**").permitAll();
+
         http.headers().frameOptions().disable(); // desctive for allowing Frames
 
         http.authorizeRequests().anyRequest().authenticated(); // all request necesite authatication

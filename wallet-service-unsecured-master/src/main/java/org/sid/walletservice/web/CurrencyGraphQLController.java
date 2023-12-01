@@ -1,5 +1,7 @@
 package org.sid.walletservice.web;
 
+import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
+import org.keycloak.representations.AccessToken;
 import org.sid.walletservice.entities.*;
 import org.sid.walletservice.repositories.*;
 import org.sid.walletservice.services.WalletServiceImpl;
@@ -7,7 +9,10 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 //import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -78,27 +83,35 @@ public class CurrencyGraphQLController {
         return currencyRepository.save(currency);
     }
     @MutationMapping
-//    @PreAuthorize("hasAuthority('ADMIN')")
-    public Wallet addWallet(@Argument String currencyCode, @Argument double initialBalance){
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public Wallet addWallet(@Argument String currencyCode, @Argument double initialBalance,
+                            Principal principal){
+        KeycloakAuthenticationToken  authenticationToken = (KeycloakAuthenticationToken) principal;
+        AccessToken token = authenticationToken.getAccount().getKeycloakSecurityContext().getToken();
+        String preferredUsername = token.getPreferredUsername();
+
         return walletService.newWallet(currencyCode,initialBalance,"user1");
     }
     @MutationMapping
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<Wallet> walletTransfer(@Argument String sourceWalletId,@Argument String destinationWalletId, @Argument double amount) throws Exception {
          return walletService.walletTransfer(sourceWalletId,destinationWalletId, amount);
     }
     @QueryMapping
-//    @PreAuthorize("hasAuthority('ADMIN')")
-    public List<Wallet> userWallets(){
-        return walletRepository.findByUserId("user1");
+    @PreAuthorize("hasAuthority('USER')")
+    public List<Wallet> userWallets(Principal principal){
+        KeycloakAuthenticationToken  authenticationToken = (KeycloakAuthenticationToken) principal;
+        AccessToken token = authenticationToken.getAccount().getKeycloakSecurityContext().getToken();
+        String preferredUsername = token.getPreferredUsername();
+        return walletRepository.findByUserId(preferredUsername);
     }
     @QueryMapping
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('USER')")
     public Wallet walletById(@Argument String id){
         return walletRepository.findById(id).orElseThrow();
     }
     @QueryMapping
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('USER')")
     public List<WalletTransaction> walletTransactions(@Argument String walletId){
         return walletTransactionRepository.findByWalletId(walletId);
     }
