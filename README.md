@@ -66,4 +66,3 @@
 ![Image](screenes/37.png)
 ![Image](screenes/38.png)
 ![Image](screenes/39.png)
-![Image](screenes/40.png)
